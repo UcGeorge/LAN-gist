@@ -33,19 +33,30 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return contact == null
         ? Expanded(
-            child: Center(
-              child: Container(
-                height: 27,
-                width: 250,
-                decoration: BoxDecoration(
-                  color: Color(0xFF2F343A),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Center(
-                  child: Text(
-                    'Select a chat to start messaging',
-                    style: Theme.of(context).textTheme.bodyText2,
-                    textAlign: TextAlign.center,
+            child: Scaffold(
+              backgroundColor: Color(0xFF18191D),
+              drawer:
+                  MediaQuery.of(context).size.width > 800 ? null : SideBar(),
+              appBar: AppBar(
+                leadingWidth:
+                    MediaQuery.of(context).size.width > 800 ? 200.0 : null,
+                backgroundColor: Theme.of(context).primaryColor,
+                elevation: 0,
+              ),
+              body: Center(
+                child: Container(
+                  height: 27,
+                  width: 250,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2F343A),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Select a chat to start messaging',
+                      style: Theme.of(context).textTheme.bodyText2,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),

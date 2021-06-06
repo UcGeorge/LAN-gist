@@ -1,14 +1,5 @@
 import 'package:flutter/material.dart';
-
-class Contact {
-  final String address;
-  final String name;
-
-  Contact({
-    required this.address,
-    required this.name,
-  });
-}
+import 'package:lets_talk/models/models.dart';
 
 const List<Color> userIconColors = [
   Colors.redAccent,

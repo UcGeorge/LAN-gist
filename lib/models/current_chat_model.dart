@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:lets_talk/data/data.dart';
+
+import 'contact.dart';
 
 class CurrentChatModel extends ChangeNotifier {
   Contact? selected;
