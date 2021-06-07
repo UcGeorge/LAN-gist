@@ -11,6 +11,7 @@ class Client extends ChangeNotifier {
   String? errorMessage;
   bool connecting = false;
   String? name;
+  Socket? socket;
 
   connect(BuildContext context, String name, String addr) async {
     this.name = name;
@@ -18,21 +19,20 @@ class Client extends ChangeNotifier {
     try {
       connecting = true;
       notifyListeners();
-      final socket = await Socket.connect(addr, 1234);
+      socket = await Socket.connect(addr, 1234);
       print(
-          'Connected to: ${socket.remoteAddress.address}:${socket.remotePort}');
+          'Connected to: ${socket!.remoteAddress.address}:${socket!.remotePort}');
       connected = true;
       connecting = false;
       notifyListeners();
 
       await sendMessage(
-        socket,
         message: name,
         receiver: 'Admin',
       );
 
       // listen for responses from the server
-      socket.listen(
+      socket!.listen(
         // handle data from the server
         (Uint8List data) {
           final serverResponse = String.fromCharCodes(data);
@@ -80,7 +80,7 @@ class Client extends ChangeNotifier {
         // handle errors
         onError: (error) {
           print(error);
-          socket.destroy();
+          socket!.destroy();
           errorMessage = error;
           connected = false;
           connecting = false;
@@ -90,7 +90,7 @@ class Client extends ChangeNotifier {
         // handle server ending connection
         onDone: () {
           print('Lost connection to server.');
-          socket.destroy();
+          socket!.destroy();
           errorMessage = 'Lost connection to server.';
           connected = false;
           connecting = false;
@@ -105,9 +105,8 @@ class Client extends ChangeNotifier {
     }
   }
 
-  Future<void> sendMessage(Socket socket,
-      {required String message, String? receiver}) async {
+  Future<void> sendMessage({required String message, String? receiver}) async {
     print('Client: ' + (receiver == null ? message : '$receiver~$message'));
-    socket.writeln(receiver == null ? message : '$receiver~$message');
+    socket!.writeln(receiver == null ? message : '$receiver~$message');
   }
 }

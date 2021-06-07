@@ -23,21 +23,24 @@ class Contact {
 }
 
 class ContactListModel extends ChangeNotifier {
-  List<Contact>? contactList;
+  List<Contact> contactList = [];
 
   setContacts(String clist) {
     List<String> list = clist.split('+');
-    contactList = list
-        .map((e) => Contact(
-              address: '0.0.0.0',
-              name: e.trim(),
-            ))
-        .toList();
+
+    for (String cn in list) {
+      if (contactList.where((e) => e.name == cn.trim()).isEmpty) {
+        contactList.add(Contact(
+          address: '0.0.0.0',
+          name: cn.trim(),
+        ));
+      }
+    }
     notifyListeners();
   }
 
   newMessage(BuildContext context, String contact, Message message) {
-    contactList!
+    contactList
         .where((element) => element.name == contact)
         .first
         .newMessage(message);

@@ -13,7 +13,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && (Platform.isLinux || Platform.isMacOS || Platform.isWindows)) {
-    await DesktopWindow.setMinWindowSize(Size(600, 800));
+    await DesktopWindow.setMinWindowSize(Size(400, 800));
   }
   runApp(
     ChangeNotifierProvider(
@@ -137,13 +137,14 @@ class _LoginState extends State<Login> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 200.0,
+                        width: 180.0,
                         child: TextField(
                           onChanged: (value) {
                             name = value;
                           },
                           // ignore: deprecated_member_use
                           cursorColor: Theme.of(context).accentColor,
+                          textAlign: TextAlign.center,
                           decoration: InputDecoration(
                             focusColor: Theme.of(context)
                                 .inputDecorationTheme
@@ -160,13 +161,14 @@ class _LoginState extends State<Login> {
                       ),
                       const SizedBox(width: 12.0),
                       Container(
-                        width: 200.0,
+                        width: 180.0,
                         child: TextField(
                           onChanged: (value) {
                             addr = value;
                           },
                           // ignore: deprecated_member_use
                           cursorColor: Theme.of(context).accentColor,
+                          textAlign: TextAlign.center,
                           decoration: InputDecoration(
                             focusColor: Theme.of(context)
                                 .inputDecorationTheme
