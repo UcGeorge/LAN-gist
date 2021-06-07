@@ -3,6 +3,7 @@ import 'package:lets_talk/data/data.dart';
 import 'package:lets_talk/models/client.dart';
 import 'package:lets_talk/models/contact.dart';
 import 'package:lets_talk/models/current_chat_model.dart';
+import 'package:lets_talk/models/message.dart';
 import 'package:provider/provider.dart';
 
 class SideBar extends StatelessWidget {
@@ -100,6 +101,9 @@ class __ContactsListState extends State<_ContactsList> {
           children: contactList?.map((e) {
                 final selected =
                     context.watch<CurrentChatModel>().selected?.name == e.name;
+
+                if (selected) e.readMessages();
+
                 return context.read<Client>().name == e.name
                     ? SizedBox.shrink()
                     : Container(
@@ -107,8 +111,6 @@ class __ContactsListState extends State<_ContactsList> {
                             selected ? Color(0xFF9D7D2A) : Colors.transparent,
                         child: ListTile(
                           selected: selected,
-                          //selectedTileColor: Color(0xFFF07E20),
-                          //hoverColor: Color(0xFF353C43),
                           onTap: () => {
                             if (!selected)
                               context.read<CurrentChatModel>().selectContact(e)
@@ -120,14 +122,26 @@ class __ContactsListState extends State<_ContactsList> {
                             style: Theme.of(context).textTheme.bodyText2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          subtitle: Text(
-                            'address: ${e.address}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyText2!
-                                .copyWith(fontSize: 10.0),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          subtitle: e.messsages.length == 0
+                              ? Text(
+                                  "${e.name} just joined.",
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyText2!
+                                      .copyWith(fontSize: 10.0),
+                                )
+                              : Text(
+                                  e.messsages.last.messageType ==
+                                          MessageType.sent
+                                      ? 'You: ${e.messsages.last.text}'
+                                      : e.messsages.last.text.toString().trim(),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyText2!
+                                      .copyWith(fontSize: 10.0),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                           leading: Container(
                             height: 50,
                             width: 50,
@@ -147,6 +161,45 @@ class __ContactsListState extends State<_ContactsList> {
                                         fontSize: 18.0),
                               ),
                             ),
+                          ),
+                          trailing: Column(
+                            children: [
+                              Spacer(),
+                              selected || e.unread == 0
+                                  ? SizedBox.shrink()
+                                  : Container(
+                                      height: 20,
+                                      width: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        // ignore: deprecated_member_use
+                                        color: Theme.of(context).accentColor,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          e.unread.toString(),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText2!
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                              Spacer(),
+                              e.messsages.length > 0
+                                  ? Text(
+                                      '${e.messsages.last.time!.hour > 12 ? e.messsages.last.time!.hour - 12 : e.messsages.last.time!.hour}:${e.messsages.last.time!.minute < 10 ? '0' + e.messsages.last.time!.minute.toString() : e.messsages.last.time!.minute} ${e.messsages.last.time!.hour > 12 ? 'PM' : 'AM'}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyText1!
+                                          .copyWith(fontSize: 10.0),
+                                    )
+                                  : SizedBox.shrink(),
+                              Spacer(),
+                            ],
                           ),
                         ),
                       );

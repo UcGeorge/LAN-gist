@@ -112,6 +112,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       Expanded(
                         child: TextField(
                           onSubmitted: (value) {},
+                          // ignore: deprecated_member_use
+                          cursorColor: Theme.of(context).accentColor,
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             focusedBorder: InputBorder.none,

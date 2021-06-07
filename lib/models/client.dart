@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:lets_talk/models/contact.dart';
 import 'package:provider/provider.dart';
 
+import 'message.dart';
+
 class Client extends ChangeNotifier {
   bool connected = false;
   String? errorMessage;
@@ -43,7 +45,34 @@ class Client extends ChangeNotifier {
             case 'Contacts':
               context.read<ContactListModel>().setContacts(message);
               break;
+            case "File":
+              if (!(message == "")) {
+                String sender = message.split('|')[0];
+                String fileName = message.split('|')[1];
+                // String fileSize = message.split('|')[2];
+                context.read<ContactListModel>().newMessage(
+                      context,
+                      sender,
+                      Message(
+                        sender: sender,
+                        text: fileName,
+                        time: DateTime.now(),
+                        messageType: MessageType.receivedFile,
+                      ),
+                    );
+              }
+              break;
             default:
+              context.read<ContactListModel>().newMessage(
+                    context,
+                    sender,
+                    Message(
+                      sender: sender,
+                      text: message,
+                      time: DateTime.now(),
+                      messageType: MessageType.received,
+                    ),
+                  );
               break;
           }
         },
