@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,12 @@ import 'package:lets_talk/models/contact.dart';
 import 'package:lets_talk/models/current_chat_model.dart';
 import 'package:lets_talk/models/message.dart';
 import 'package:lets_talk/widgets/side_bar.dart';
+import 'package:lets_talk/widgets/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:filepicker_windows/filepicker_windows.dart';
+import 'package:dropfiles_window/dropfiles_window.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
@@ -21,12 +27,14 @@ class _ChatScreenState extends State<ChatScreen> {
   ScrollController? _scrollController;
   late FocusNode myFocusNode;
   String message = '';
+  File? fileMessage;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     myFocusNode = FocusNode();
+    initPlatformState();
   }
 
   @override
@@ -34,6 +42,48 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController?.dispose();
     myFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> initPlatformState() async {
+    if (Platform.isWindows == true) {
+      // Platform messages may fail, so we use a try/catch PlatformException.
+      try {
+        DropfilesWindow.modifyWindowAcceptFiles((String strName) {
+          print("fileName=$strName");
+          fileMessage = File(strName);
+          if (fileMessage != null) {
+            print(fileMessage!.path);
+            context.read<Client>().sendMessage(
+                message: fileMessage!.path,
+                receiver: context.read<CurrentChatModel>().selected!.name);
+            context.read<ContactListModel>().newMessage(
+                  context,
+                  context.read<CurrentChatModel>().selected!.name,
+                  Message(
+                    messageType: MessageType.sentFile,
+                    sender: 'Self',
+                    text: fileMessage!.path,
+                    picture: fileMessage!.path.endsWith('.png') ||
+                            fileMessage!.path.endsWith('.jpg') ||
+                            fileMessage!.path.endsWith('.jpeg')
+                        ? fileMessage
+                        : null,
+                    file: fileMessage,
+                  ),
+                );
+          } else {
+            print("Failed to fetch file.");
+          }
+        });
+      } on PlatformException {
+        print("Failed to modifyDropFilesWindow.");
+      }
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) print("Not mounted!");
   }
 
   @override
@@ -112,7 +162,45 @@ class _ChatScreenState extends State<ChatScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            final file = OpenFilePicker()
+                              ..filterSpecification = {
+                                'Word Document (*.doc)': '*.doc',
+                                'Web Page (*.htm; *.html)': '*.htm;*.html',
+                                'Text Document (*.txt)': '*.txt',
+                                'Picture (*.png; *.jpeg; *.jpg)':
+                                    '*.png; *.jpeg; *.jpg',
+                                'All Files': '*.*'
+                              }
+                              ..defaultFilterIndex = 0
+                              ..defaultExtension = 'png'
+                              ..title = 'Select a file';
+
+                            fileMessage = file.getFile();
+                            if (fileMessage != null) {
+                              print(fileMessage!.path);
+                            }
+                            context.read<Client>().sendMessage(
+                                message: fileMessage!.path,
+                                receiver: contact.name);
+                            context.read<ContactListModel>().newMessage(
+                                  context,
+                                  contact.name,
+                                  Message(
+                                    messageType: MessageType.sentFile,
+                                    sender: 'Self',
+                                    text: fileMessage!.path,
+                                    picture: fileMessage!.path
+                                                .endsWith('.png') ||
+                                            fileMessage!.path
+                                                .endsWith('.jpg') ||
+                                            fileMessage!.path.endsWith('.jpeg')
+                                        ? fileMessage
+                                        : null,
+                                    file: fileMessage,
+                                  ),
+                                );
+                          },
                           icon: Icon(
                             Icons.attach_file,
                             size: 30.0,
@@ -139,7 +227,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                     messageType: MessageType.sent,
                                     sender: 'Self',
                                     text: value,
-                                    time: DateTime.now(),
                                   ),
                                 );
                             msgController.clear();
@@ -174,7 +261,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                     messageType: MessageType.sent,
                                     sender: 'Self',
                                     text: message,
-                                    time: DateTime.now(),
                                   ),
                                 );
                             msgController.clear();
@@ -270,85 +356,15 @@ class __ChatMessageViewState extends State<_ChatMessageView> {
   _buildMessage(Message message) {
     switch (message.messageType) {
       case MessageType.received:
-        return ChatBubble(
-            messageType: MessageType.received,
-            text: message.text,
-            time: message.time ?? DateTime.now());
       case MessageType.sent:
-        return ChatBubble(
-            messageType: MessageType.sent,
-            text: message.text,
-            time: message.time ?? DateTime.now());
+        return ChatBubble(message: message);
+      case MessageType.sentFile:
+      case MessageType.receivedFile:
+        return message.picture != null
+            ? PictureBubble(message: message)
+            : FileBubble(message: message);
       default:
         return SizedBox.shrink();
     }
-  }
-}
-
-class ChatBubble extends StatelessWidget {
-  final MessageType messageType;
-  final String text;
-  final DateTime time;
-  const ChatBubble(
-      {Key? key,
-      required this.messageType,
-      required this.text,
-      required this.time})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(minWidth: 100, maxWidth: 600),
-      margin: messageType == MessageType.received
-          ? EdgeInsets.only(
-              bottom: 8.0,
-              right: MediaQuery.of(context).size.width < 800
-                  ? MediaQuery.of(context).size.width - 350
-                  : MediaQuery.of(context).size.width - 800,
-            )
-          : EdgeInsets.only(
-              bottom: 8.0,
-              left: MediaQuery.of(context).size.width < 800
-                  ? MediaQuery.of(context).size.width - 350
-                  : MediaQuery.of(context).size.width - 800,
-            ),
-      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
-      decoration: BoxDecoration(
-        color: messageType == MessageType.received
-            ? Color(0xFF33393F)
-            : Color(0xFF2A2F33),
-        borderRadius: messageType == MessageType.received
-            ? BorderRadius.only(
-                topRight: Radius.circular(10),
-                bottomLeft: Radius.circular(10),
-                bottomRight: Radius.circular(10),
-              )
-            : BorderRadius.only(
-                topLeft: Radius.circular(10),
-                bottomLeft: Radius.circular(10),
-                bottomRight: Radius.circular(10),
-              ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: messageType == MessageType.received
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.end,
-        children: [
-          Text(
-            text.trim(),
-            softWrap: true,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${time.hour > 12 ? time.hour - 12 : time.hour}:${time.minute < 10 ? '0' + time.minute.toString() : time.minute} ${time.hour > 12 ? 'PM' : 'AM'}',
-            style:
-                Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 10.0),
-          )
-        ],
-      ),
-    );
   }
 }

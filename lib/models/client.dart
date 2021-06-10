@@ -56,7 +56,6 @@ class Client extends ChangeNotifier {
                       Message(
                         sender: sender,
                         text: fileName,
-                        time: DateTime.now(),
                         messageType: MessageType.receivedFile,
                       ),
                     );
@@ -69,7 +68,6 @@ class Client extends ChangeNotifier {
                     Message(
                       sender: sender,
                       text: message,
-                      time: DateTime.now(),
                       messageType: MessageType.received,
                     ),
                   );
@@ -99,6 +97,7 @@ class Client extends ChangeNotifier {
       );
     } catch (e) {
       errorMessage = e.toString();
+      socket?.destroy();
       connected = false;
       connecting = false;
       notifyListeners();

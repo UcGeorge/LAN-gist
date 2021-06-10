@@ -133,7 +133,9 @@ class __ContactsListState extends State<_ContactsList> {
                                 )
                               : Text(
                                   e.messsages.last.messageType ==
-                                          MessageType.sent
+                                              MessageType.sent ||
+                                          e.messsages.last.messageType ==
+                                              MessageType.sentFile
                                       ? 'You: ${e.messsages.last.text}'
                                       : e.messsages.last.text.toString().trim(),
                                   style: Theme.of(context)
